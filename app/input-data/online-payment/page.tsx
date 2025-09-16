@@ -10,7 +10,7 @@ import { useState } from "react"
 export default function OnlinePaymentInputPage() {
   const [formData, setFormData] = useState({
     transactionDate: "2025-01-01", // Format YYYY-MM-DD
-    transactionHour: "0", // Jam saja (0-23)
+    transactionTime: "00:00", // Format HH:MM (fleksibel dengan menit)
     type: "",
     amount: "",
     isFraud: "",
@@ -28,34 +28,37 @@ export default function OnlinePaymentInputPage() {
   }
 
   // Fungsi untuk membulatkan waktu berdasarkan aturan:
-  // >= 30 menit = jam berikutnya (:01)
-  // < 30 menit = jam sekarang (:00)
-  const roundTime = (timeString: string): { hour: number, minute: number, rounded: string } => {
+  // >= 30 menit = jam berikutnya (01:00)
+  // < 30 menit = jam sekarang (00:00)
+  const roundTime = (timeString: string): { originalHour: number, originalMinute: number, roundedHour: number, roundedTime: string } => {
     const [hours, minutes] = timeString.split(':').map(Number)
     
     if (minutes >= 30) {
-      // Bulatkan ke jam berikutnya dengan menit :01
+      // Bulatkan ke jam berikutnya
       const nextHour = (hours + 1) % 24
       return {
-        hour: nextHour,
-        minute: 1,
-        rounded: `${nextHour.toString().padStart(2, '0')}:01`
+        originalHour: hours,
+        originalMinute: minutes,
+        roundedHour: nextHour,
+        roundedTime: `${nextHour.toString().padStart(2, '0')}:00`
       }
     } else {
-      // Bulatkan ke jam sekarang dengan menit :00
+      // Bulatkan ke jam sekarang
       return {
-        hour: hours,
-        minute: 0,
-        rounded: `${hours.toString().padStart(2, '0')}:00`
+        originalHour: hours,
+        originalMinute: minutes,
+        roundedHour: hours,
+        roundedTime: `${hours.toString().padStart(2, '0')}:00`
       }
     }
   }
 
   // Fungsi untuk menghitung step berdasarkan tanggal dan jam yang sudah dibulatkan
-  const calculateStep = (dateString: string, hourValue: string): number => {
+  const calculateStep = (dateString: string, timeString: string): number => {
     const date = new Date(dateString)
     const day = date.getDate()
-    const hour = parseInt(hourValue)
+    const roundedTime = roundTime(timeString)
+    const hour = roundedTime.roundedHour
     
     // Rumus: step = (day - 1) * 24 + hour + 1
     const step = (day - 1) * 24 + hour + 1
@@ -79,19 +82,12 @@ export default function OnlinePaymentInputPage() {
     return date.toLocaleDateString('id-ID', options)
   }
 
-  // Generate jam untuk dropdown (0-23)
-  const generateHourOptions = () => {
-    return Array.from({ length: 24 }, (_, i) => ({
-      value: i.toString(),
-      label: `${i.toString().padStart(2, '0')}:00`
-    }))
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Hitung step berdasarkan jam yang dipilih (sudah dalam format jam bulat)
-    const calculatedStep = calculateStep(formData.transactionDate, formData.transactionHour)
+    // Bulatkan waktu sebelum menghitung step
+    const roundedTimeInfo = roundTime(formData.transactionTime)
+    const calculatedStep = calculateStep(formData.transactionDate, formData.transactionTime)
     
     // Validasi step
     if (!validateStep(calculatedStep)) {
@@ -100,14 +96,13 @@ export default function OnlinePaymentInputPage() {
       return
     }
     
-    // Parse tanggal dan jam untuk debugging
+    // Parse tanggal untuk debugging
     const date = new Date(formData.transactionDate)
     const day = date.getDate()
-    const hour = parseInt(formData.transactionHour)
     
-    // Siapkan data untuk backend (step sudah dikonversi)
+    // Siapkan data untuk backend (step sudah dikonversi dengan waktu yang dibulatkan)
     const dataForBackend = {
-      step: calculatedStep, // Step yang sudah dihitung
+      step: calculatedStep, // Step yang sudah dihitung berdasarkan waktu yang dibulatkan
       type: formData.type,
       amount: parseFloat(formData.amount),
       isFraud: parseInt(formData.isFraud),
@@ -115,17 +110,27 @@ export default function OnlinePaymentInputPage() {
       newbalanceOrig: parseFloat(formData.newbalanceOrig),
       oldbalanceDest: parseFloat(formData.oldbalanceDest),
       newbalanceDest: parseFloat(formData.newbalanceDest),
+      // Info tambahan untuk debugging
+      originalTime: formData.transactionTime,
+      roundedTime: roundedTimeInfo.roundedTime,
     }
     
     // Console log untuk debugging
     console.log("=== DEBUGGING INFO ===")
     console.log("📅 Input Tanggal:", formData.transactionDate)
-    console.log("🕐 Input Jam:", formData.transactionHour)
+    console.log("🕐 Input Jam (Original):", formData.transactionTime)
     console.log("📅 Tanggal Readable:", formatReadableDate(formData.transactionDate))
     console.log("📊 Hari dari tanggal:", day)
-    console.log("🕐 Jam yang dipilih:", hour)
-    console.log("📐 Rumus Step: (", day, "- 1) × 24 +", hour, "+ 1")
-    console.log("📐 Perhitungan: (", day - 1, ") × 24 +", hour, "+ 1 =", calculatedStep)
+    console.log("--- PROSES PEMBULATAN ---")
+    console.log("🕐 Jam Original:", roundedTimeInfo.originalHour, "Menit:", roundedTimeInfo.originalMinute)
+    console.log("⚡ Logika Pembulatan:", roundedTimeInfo.originalMinute >= 30 ? 
+      `Menit ${roundedTimeInfo.originalMinute} >= 30, bulatkan ke jam berikutnya` : 
+      `Menit ${roundedTimeInfo.originalMinute} < 30, bulatkan ke jam sekarang`)
+    console.log("🕐 Jam Setelah Pembulatan:", roundedTimeInfo.roundedHour)
+    console.log("🕐 Waktu Final untuk Step:", roundedTimeInfo.roundedTime)
+    console.log("--- PERHITUNGAN STEP ---")
+    console.log("📐 Rumus Step: (", day, "- 1) × 24 +", roundedTimeInfo.roundedHour, "+ 1")
+    console.log("📐 Perhitungan: (", day - 1, ") × 24 +", roundedTimeInfo.roundedHour, "+ 1 =", calculatedStep)
     console.log("✅ Step yang dihitung:", calculatedStep)
     console.log("📊 Data untuk Backend:", dataForBackend)
     console.log("===================")
@@ -134,11 +139,11 @@ export default function OnlinePaymentInputPage() {
     console.log("🚀 Data siap dikirim ke backend!")
   }
 
-  // Hitung step real-time untuk preview
-  const currentStep = calculateStep(formData.transactionDate, formData.transactionHour)
+  // Hitung step dan pembulatan real-time untuk preview
+  const currentRoundedTime = roundTime(formData.transactionTime)
+  const currentStep = calculateStep(formData.transactionDate, formData.transactionTime)
   const currentDate = new Date(formData.transactionDate)
   const currentDay = currentDate.getDate()
-  const currentHour = parseInt(formData.transactionHour)
 
   return (
     <div className="relative min-h-screen bg-white">
@@ -214,39 +219,41 @@ export default function OnlinePaymentInputPage() {
                     </p>
                   </div>
                   
-                  {/* Input Jam dengan Dropdown */}
+                  {/* Input Jam dengan Time Input (Fleksibel dengan Menit) */}
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
-                      🕐 Jam Transaksi
+                      🕐 Jam Transaksi (Fleksibel)
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Clock className="w-5 h-5 text-gray-400" />
                       </div>
-                      <select
-                        value={formData.transactionHour}
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => 
-                          handleInputChange("transactionHour", e.target.value)
+                      <input
+                        type="time"
+                        value={formData.transactionTime}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                          handleInputChange("transactionTime", e.target.value)
                         }
-                        className="w-full h-[45px] pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-800 text-base focus:border-[#FF5F31] focus:ring-4 focus:ring-[#FF5F31]/20 transition-all duration-300 hover:border-gray-400 appearance-none"
+                        className="w-full h-[45px] pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-800 text-base focus:border-[#FF5F31] focus:ring-4 focus:ring-[#FF5F31]/20 transition-all duration-300 hover:border-gray-400"
                         style={{ fontFamily: "Inter, sans-serif" }}
                         required
-                      >
-                        {generateHourOptions().map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
+                      />
                     </div>
-                    <p className="text-xs text-blue-600">
-                      ⚡ Otomatis dibulatkan ke jam penuh (xx:00)
-                    </p>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                      <p className="text-xs text-yellow-700 flex items-center">
+                        <span className="mr-1">⚡</span>
+                        <strong>Auto Pembulatan:</strong> 
+                        <span className="ml-1">
+                          {formData.transactionTime} → <strong>{currentRoundedTime.roundedTime}</strong>
+                        </span>
+                      </p>
+                      <p className="text-xs text-yellow-600 mt-1">
+                        {currentRoundedTime.originalMinute >= 30 ? 
+                          `Menit ${currentRoundedTime.originalMinute} ≥ 30, dibulatkan ke jam berikutnya` :
+                          `Menit ${currentRoundedTime.originalMinute} < 30, dibulatkan ke jam sekarang`
+                        }
+                      </p>
+                    </div>
                   </div>
                   
                   {/* Preview Step dengan Design Baru */}
@@ -258,14 +265,18 @@ export default function OnlinePaymentInputPage() {
                         <h4 className="text-sm font-bold text-blue-800">Real-time Step Preview</h4>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div className="grid grid-cols-3 gap-3 mb-3">
                         <div className="bg-white/70 rounded-lg p-2">
                           <p className="text-xs text-blue-600 font-medium">Hari ke-</p>
                           <p className="text-lg font-bold text-blue-900">{currentDay}</p>
                         </div>
                         <div className="bg-white/70 rounded-lg p-2">
-                          <p className="text-xs text-blue-600 font-medium">Jam</p>
-                          <p className="text-lg font-bold text-blue-900">{currentHour}:00</p>
+                          <p className="text-xs text-blue-600 font-medium">Input</p>
+                          <p className="text-sm font-bold text-blue-900">{formData.transactionTime}</p>
+                        </div>
+                        <div className="bg-white/70 rounded-lg p-2">
+                          <p className="text-xs text-blue-600 font-medium">Dibulatkan</p>
+                          <p className="text-sm font-bold text-green-900">{currentRoundedTime.roundedTime}</p>
                         </div>
                       </div>
                       
@@ -275,7 +286,10 @@ export default function OnlinePaymentInputPage() {
                           <span className="text-xl font-bold text-blue-900 ml-2">{currentStep}</span>
                         </p>
                         <p className="text-xs text-blue-600">
-                          Rumus: ({currentDay} - 1) × 24 + {currentHour} + 1 = <strong>{currentStep}</strong>
+                          Rumus: ({currentDay} - 1) × 24 + {currentRoundedTime.roundedHour} + 1 = <strong>{currentStep}</strong>
+                        </p>
+                        <p className="text-xs text-green-600 mt-1">
+                          ✓ Menggunakan jam yang sudah dibulatkan: <strong>{currentRoundedTime.roundedTime}</strong>
                         </p>
                       </div>
                     </div>
@@ -293,22 +307,25 @@ export default function OnlinePaymentInputPage() {
                       <strong className="text-[#FF5F31]">📐 Formula Step:</strong>
                       <br />
                       <code className="bg-gray-200 px-2 py-1 rounded text-xs font-mono">
-                        Step = (Hari - 1) × 24 + Jam + 1
+                        Step = (Hari - 1) × 24 + Jam_Dibulatkan + 1
                       </code>
                     </div>
                     
                     <div>
-                      <strong className="text-[#FF5F31]">⏰ Sistem Pembulatan:</strong>
+                      <strong className="text-[#FF5F31]">⏰ Sistem Pembulatan Otomatis:</strong>
                       <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
-                        <li><strong>Menit ≥ 30:</strong> Bulatkan ke jam berikutnya (xx:01)</li>
-                        <li><strong>Menit &lt; 30:</strong> Bulatkan ke jam sekarang (xx:00)</li>
+                        <li><strong>Menit ≥ 30:</strong> Bulatkan ke jam berikutnya</li>
+                        <li><strong>Menit &lt; 30:</strong> Bulatkan ke jam sekarang</li>
                       </ul>
                     </div>
                     
-                    <div className="bg-white/60 rounded-lg p-2 border border-orange-200">
-                      <p className="text-xs text-gray-600">
-                        💡 <strong>Contoh:</strong> Input 14:45 → Menjadi 15:01, Input 14:20 → Menjadi 14:00
-                      </p>
+                    <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
+                      <p className="text-xs text-gray-600 font-medium mb-2">💡 <strong>Contoh Pembulatan:</strong></p>
+                      <div className="grid grid-cols-1 gap-1 text-xs">
+                        <div>• 14:45 → <strong>15:00</strong> (menit 45 ≥ 30)</div>
+                        <div>• 14:29 → <strong>14:00</strong> (menit 29 &lt; 30)</div>
+                        <div>• 23:30 → <strong>00:00</strong> (jam 24 = jam 0)</div>
+                      </div>
                     </div>
                   </div>
                 </div>
