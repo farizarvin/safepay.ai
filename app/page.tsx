@@ -15,8 +15,8 @@ export default function HomePage() {
 
   const navItems = [
     { name: "Beranda", href: "#hero" },
-    { name: "Online Payment", href: "#online-payment" },
-    { name: "Dashboard", href: "#fraud-dashboard" },
+    { name: "Dashboard", href: "#dashboard" },
+    { name: "Online Payment", href: "#online-payment" }
   ]
 
   useEffect(() => {

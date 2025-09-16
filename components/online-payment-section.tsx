@@ -65,7 +65,11 @@ export default function OnlinePaymentSection() {
             <div className="relative group">
               <div className="w-[280px] sm:w-[320px] md:w-[360px] lg:w-[400px] h-[280px] sm:h-[320px] md:h-[360px] lg:h-[400px] bg-gradient-to-br from-[#FF5F31] to-[#EE4312] rounded-2xl flex items-center justify-center relative z-10 group-hover:scale-105 transition-all duration-500 hover:shadow-2xl">
                 <div className="text-white text-center p-8">
-                  <Phone className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 group-hover:rotate-12 transition-transform duration-300" />
+                  <img
+                    src="/logo.png"
+                    alt="SafePay.AI Logo"
+                    className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto mb-4 lg:mb-6"
+                  />
                   <h3 className="text-xl sm:text-2xl font-bold mb-3">Online Payment</h3>
                   <p className="text-base sm:text-lg">Secure Transactions</p>
                 </div>
