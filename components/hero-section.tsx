@@ -31,7 +31,7 @@ export default function HeroSection({ onLearnMore, onTalkToSafy }: HeroSectionPr
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
               {/* Button Prediksi */}
-              <Button 
+              <Button
                 asChild
                 className="w-full sm:w-auto bg-gradient-to-r from-[#EE4312] to-[#FF5F31] hover:from-[#FF5F31] hover:to-[#EE4312] text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg group min-w-[200px]"
               >
@@ -59,7 +59,12 @@ export default function HeroSection({ onLearnMore, onTalkToSafy }: HeroSectionPr
             <div className="relative group">
               <div className="w-[300px] sm:w-[350px] md:w-[400px] lg:w-[450px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[320px] bg-gradient-to-br from-[#FF5F31] to-[#EE4312] rounded-2xl flex items-center justify-center relative z-10 group-hover:scale-105 transition-all duration-500 hover:shadow-2xl">
                 <div className="text-white text-center p-6 lg:p-8">
-                  <Shield className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto mb-4 lg:mb-6 animate-bounce" />
+                  {/* <Shield className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto mb-4 lg:mb-6 animate-bounce" /> */}
+                  <img
+                    src="/logo.png"
+                    alt="SafePay.AI Logo"
+                    className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto mb-4 lg:mb-6 animate-bounce"
+                  />
                   <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 lg:mb-3">Fraud Prevention</h3>
                   <p className="text-base sm:text-lg lg:text-xl">AI-Powered Security System</p>
                 </div>

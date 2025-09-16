@@ -326,7 +326,7 @@ export default function OnlinePaymentInputPage() {
                 </label>
                 <Input
                   type="number"
-                  step="0.01"
+                  step="0.01" 
                   placeholder="Saldo penerima setelah transaksi"
                   value={formData.newbalanceDest}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>

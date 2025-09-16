@@ -79,6 +79,11 @@ export default function HomePage() {
             onClick={() => scrollToSection("#hero")}
             className="flex items-center group cursor-pointer hover:scale-105 transition-all duration-300"
           >
+            <img
+              src="/logo.png"
+              alt="SafePay.AI Logo"
+              className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto group-hover:scale-110 transition-all duration-300 -ml-4 sm:-ml-6"
+            />
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-[#D9D9D9] tracking-[0.07em] group-hover:text-white transition-colors duration-300">
               SafePay.AI
             </h1>
