@@ -32,7 +32,7 @@ export default function OnlinePaymentInputPage() {
   // < 30 menit = jam sekarang (00:00)
   const roundTime = (timeString: string): { originalHour: number, originalMinute: number, roundedHour: number, roundedTime: string } => {
     const [hours, minutes] = timeString.split(':').map(Number)
-    
+
     if (minutes >= 30) {
       // Bulatkan ke jam berikutnya
       const nextHour = (hours + 1) % 24
@@ -59,7 +59,7 @@ export default function OnlinePaymentInputPage() {
     const day = date.getDate()
     const roundedTime = roundTime(timeString)
     const hour = roundedTime.roundedHour
-    
+
     // Rumus: step = (day - 1) * 24 + hour + 1
     const step = (day - 1) * 24 + hour + 1
     return step
@@ -73,33 +73,28 @@ export default function OnlinePaymentInputPage() {
   // Fungsi untuk format tanggal yang readable
   const formatReadableDate = (dateString: string): string => {
     const date = new Date(dateString)
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     }
     return date.toLocaleDateString('id-ID', options)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Bulatkan waktu sebelum menghitung step
     const roundedTimeInfo = roundTime(formData.transactionTime)
     const calculatedStep = calculateStep(formData.transactionDate, formData.transactionTime)
-    
+
     // Validasi step
     if (!validateStep(calculatedStep)) {
-      console.error("❌ Step tidak valid:", calculatedStep)
       alert(`Step yang dihitung (${calculatedStep}) di luar range valid (1-744). Silakan pilih tanggal dan jam yang sesuai.`)
       return
     }
-    
-    // Parse tanggal untuk debugging
-    const date = new Date(formData.transactionDate)
-    const day = date.getDate()
-    
+
     // Siapkan data untuk backend (step sudah dikonversi dengan waktu yang dibulatkan)
     const dataForBackend = {
       step: calculatedStep, // Step yang sudah dihitung berdasarkan waktu yang dibulatkan
@@ -114,29 +109,9 @@ export default function OnlinePaymentInputPage() {
       originalTime: formData.transactionTime,
       roundedTime: roundedTimeInfo.roundedTime,
     }
-    
-    // Console log untuk debugging
-    console.log("=== DEBUGGING INFO ===")
-    console.log("📅 Input Tanggal:", formData.transactionDate)
-    console.log("🕐 Input Jam (Original):", formData.transactionTime)
-    console.log("📅 Tanggal Readable:", formatReadableDate(formData.transactionDate))
-    console.log("📊 Hari dari tanggal:", day)
-    console.log("--- PROSES PEMBULATAN ---")
-    console.log("🕐 Jam Original:", roundedTimeInfo.originalHour, "Menit:", roundedTimeInfo.originalMinute)
-    console.log("⚡ Logika Pembulatan:", roundedTimeInfo.originalMinute >= 30 ? 
-      `Menit ${roundedTimeInfo.originalMinute} >= 30, bulatkan ke jam berikutnya` : 
-      `Menit ${roundedTimeInfo.originalMinute} < 30, bulatkan ke jam sekarang`)
-    console.log("🕐 Jam Setelah Pembulatan:", roundedTimeInfo.roundedHour)
-    console.log("🕐 Waktu Final untuk Step:", roundedTimeInfo.roundedTime)
-    console.log("--- PERHITUNGAN STEP ---")
-    console.log("📐 Rumus Step: (", day, "- 1) × 24 +", roundedTimeInfo.roundedHour, "+ 1")
-    console.log("📐 Perhitungan: (", day - 1, ") × 24 +", roundedTimeInfo.roundedHour, "+ 1 =", calculatedStep)
-    console.log("✅ Step yang dihitung:", calculatedStep)
-    console.log("📊 Data untuk Backend:", dataForBackend)
-    console.log("===================")
-    
+
     // Here you would typically send the data to your API
-    console.log("🚀 Data siap dikirim ke backend!")
+    // API call implementation goes here
   }
 
   // Hitung step dan pembulatan real-time untuk preview
@@ -180,8 +155,8 @@ export default function OnlinePaymentInputPage() {
       {/* Form Content - Fully Responsive */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <form onSubmit={handleSubmit} className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
-          
-          {/* Waktu Transaksi (Tanggal dan Jam) */}
+
+          {/* Waktu Transaksi (Tanggal dan Jam) - Keterangan Naik Lagi */}
           <div className="space-y-3 sm:space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-8">
               <div className="flex-1 lg:max-w-md">
@@ -191,7 +166,7 @@ export default function OnlinePaymentInputPage() {
                 >
                   Waktu Transaksi
                 </label>
-                
+
                 {/* Input Tanggal dan Jam */}
                 <div className="space-y-4">
                   {/* Input Tanggal dengan Icon Kiri */}
@@ -206,7 +181,7 @@ export default function OnlinePaymentInputPage() {
                       <input
                         type="date"
                         value={formData.transactionDate}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           handleInputChange("transactionDate", e.target.value)
                         }
                         className="w-full h-[45px] pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-800 text-base focus:border-[#FF5F31] focus:ring-4 focus:ring-[#FF5F31]/20 transition-all duration-300 hover:border-gray-400"
@@ -218,7 +193,7 @@ export default function OnlinePaymentInputPage() {
                       {formatReadableDate(formData.transactionDate)}
                     </p>
                   </div>
-                  
+
                   {/* Input Jam dengan Time Input (Fleksibel dengan Menit) */}
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -231,7 +206,7 @@ export default function OnlinePaymentInputPage() {
                       <input
                         type="time"
                         value={formData.transactionTime}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           handleInputChange("transactionTime", e.target.value)
                         }
                         className="w-full h-[45px] pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-800 text-base focus:border-[#FF5F31] focus:ring-4 focus:ring-[#FF5F31]/20 transition-all duration-300 hover:border-gray-400"
@@ -239,100 +214,23 @@ export default function OnlinePaymentInputPage() {
                         required
                       />
                     </div>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-                      <p className="text-xs text-yellow-700 flex items-center">
-                        <span className="mr-1">⚡</span>
-                        <strong>Auto Pembulatan:</strong> 
-                        <span className="ml-1">
-                          {formData.transactionTime} → <strong>{currentRoundedTime.roundedTime}</strong>
-                        </span>
-                      </p>
-                      <p className="text-xs text-yellow-600 mt-1">
-                        {currentRoundedTime.originalMinute >= 30 ? 
-                          `Menit ${currentRoundedTime.originalMinute} ≥ 30, dibulatkan ke jam berikutnya` :
-                          `Menit ${currentRoundedTime.originalMinute} < 30, dibulatkan ke jam sekarang`
-                        }
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Preview Step dengan Design Baru */}
-                  <div className="relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-blue-100 rounded-full -mt-10 -mr-10 opacity-50"></div>
-                    <div className="relative">
-                      <div className="flex items-center space-x-2 mb-3">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                        <h4 className="text-sm font-bold text-blue-800">Real-time Step Preview</h4>
-                      </div>
-                      
-                      <div className="grid grid-cols-3 gap-3 mb-3">
-                        <div className="bg-white/70 rounded-lg p-2">
-                          <p className="text-xs text-blue-600 font-medium">Hari ke-</p>
-                          <p className="text-lg font-bold text-blue-900">{currentDay}</p>
-                        </div>
-                        <div className="bg-white/70 rounded-lg p-2">
-                          <p className="text-xs text-blue-600 font-medium">Input</p>
-                          <p className="text-sm font-bold text-blue-900">{formData.transactionTime}</p>
-                        </div>
-                        <div className="bg-white/70 rounded-lg p-2">
-                          <p className="text-xs text-blue-600 font-medium">Dibulatkan</p>
-                          <p className="text-sm font-bold text-green-900">{currentRoundedTime.roundedTime}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-white/80 rounded-lg p-3 border border-blue-200">
-                        <p className="text-sm text-blue-800 mb-1">
-                          📊 <strong>Step yang dihitung:</strong> 
-                          <span className="text-xl font-bold text-blue-900 ml-2">{currentStep}</span>
-                        </p>
-                        <p className="text-xs text-blue-600">
-                          Rumus: ({currentDay} - 1) × 24 + {currentRoundedTime.roundedHour} + 1 = <strong>{currentStep}</strong>
-                        </p>
-                        <p className="text-xs text-green-600 mt-1">
-                          ✓ Menggunakan jam yang sudah dibulatkan: <strong>{currentRoundedTime.roundedTime}</strong>
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
-              <div className="flex-1">
-                <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-6 border-l-4 border-[#FF5F31]">
-                  <h4 className="font-bold text-gray-800 mb-3 flex items-center">
-                    <span className="text-lg mr-2">ℹ️</span>
-                    Tentang Step & Pembulatan Waktu
-                  </h4>
-                  <div className="space-y-3 text-sm text-gray-700">
-                    <div>
-                      <strong className="text-[#FF5F31]">📐 Formula Step:</strong>
-                      <br />
-                      <code className="bg-gray-200 px-2 py-1 rounded text-xs font-mono">
-                        Step = (Hari - 1) × 24 + Jam_Dibulatkan + 1
-                      </code>
-                    </div>
-                    
-                    <div>
-                      <strong className="text-[#FF5F31]">⏰ Sistem Pembulatan Otomatis:</strong>
-                      <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
-                        <li><strong>Menit ≥ 30:</strong> Bulatkan ke jam berikutnya</li>
-                        <li><strong>Menit &lt; 30:</strong> Bulatkan ke jam sekarang</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
-                      <p className="text-xs text-gray-600 font-medium mb-2">💡 <strong>Contoh Pembulatan:</strong></p>
-                      <div className="grid grid-cols-1 gap-1 text-xs">
-                        <div>• 14:45 → <strong>15:00</strong> (menit 45 ≥ 30)</div>
-                        <div>• 14:29 → <strong>14:00</strong> (menit 29 &lt; 30)</div>
-                        <div>• 23:30 → <strong>00:00</strong> (jam 24 = jam 0)</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
+              {/* Keterangan di Kanan - Margin Top Dikurangi (Naik Lagi) */}
+              <div className="flex-1 mt-20 lg:mt-28">
+                <p
+                  className="text-[#7D7D7D] text-sm sm:text-base leading-relaxed text-justify"
+                  style={{ fontFamily: "Inter, sans-serif" }}
+                >
+                  Masukkan tanggal dan waktu transaksi yang akan dianalisis. Sistem akan otomatis memproses waktu untuk perhitungan deteksi penipuan.
+                </p>
               </div>
             </div>
             <hr className="border-[#7D7D7D] opacity-30" />
           </div>
+
 
           {/* Type */}
           <div className="space-y-3 sm:space-y-4">
@@ -399,41 +297,6 @@ export default function OnlinePaymentInputPage() {
                 >
                   Jumlah uang yang ditransaksikan. Nilai yang tidak biasa atau terlalu besar dapat mengindikasikan
                   aktivitas penipuan.
-                </p>
-              </div>
-            </div>
-            <hr className="border-[#7D7D7D] opacity-30" />
-          </div>
-
-          {/* Is Fraud */}
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-8">
-              <div className="flex-1 lg:max-w-md">
-                <label
-                  className="block text-black text-sm sm:text-base lg:text-lg font-medium mb-2 sm:mb-3"
-                  style={{ fontFamily: "Roboto, sans-serif" }}
-                >
-                  Is Fraud (Status Penipuan)
-                </label>
-                <select
-                  value={formData.isFraud}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleInputChange("isFraud", e.target.value)}
-                  className="w-full h-[45px] bg-white border-2 border-gray-300 rounded-lg px-4 py-2 text-gray-800 text-base focus:border-[#FF5F31] focus:ring-4 focus:ring-[#FF5F31]/20 transition-all duration-300 hover:border-gray-400"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                  required
-                >
-                  <option value="">Pilih status</option>
-                  <option value="0">0 - Bukan Penipuan</option>
-                  <option value="1">1 - Penipuan</option>
-                </select>
-              </div>
-              <div className="flex-1">
-                <p
-                  className="text-[#7D7D7D] text-sm sm:text-base leading-relaxed text-justify"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  Status apakah transaksi ini merupakan penipuan atau tidak. Digunakan untuk validasi dan training model
-                  deteksi fraud.
                 </p>
               </div>
             </div>
@@ -560,7 +423,7 @@ export default function OnlinePaymentInputPage() {
                 </label>
                 <Input
                   type="number"
-                  step="0.01" 
+                  step="0.01"
                   placeholder="Saldo penerima setelah transaksi"
                   value={formData.newbalanceDest}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
