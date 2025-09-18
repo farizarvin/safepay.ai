@@ -24,8 +24,7 @@ export default function HeroSection({ onLearnMore, onTalkToSafy }: HeroSectionPr
                 </span>
               </h1>
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                Inovasi Sistem Deteksi Dini Fraud dan Pencucian Uang dalam Transaksi Digital Berbasis Artificial
-                Intelligence dan Analisis Spasial
+                Inovasi AI dalam Deteksi Fraud dan Money Laundering Menuju Ekonomi Digital Aman dan Berkelanjutan
               </p>
             </div>
 

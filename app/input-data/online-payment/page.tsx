@@ -7,6 +7,17 @@ import { ArrowLeft, Calendar, Clock } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
+// Type definition untuk better type safety
+interface FraudDetectionResult {
+  model_type: string;
+  is_fraud: boolean;
+  fraud_probability: number;
+  confidence_level: string;
+  risk_score: string;
+  transaction_amount: number;
+  features_used: Record<string, string | number | boolean>;
+}
+
 export default function OnlinePaymentInputPage() {
   const [formData, setFormData] = useState({
     transactionDate: "2025-01-01", // Format YYYY-MM-DD
@@ -19,6 +30,11 @@ export default function OnlinePaymentInputPage() {
     oldbalanceDest: "",
     newbalanceDest: "",
   })
+
+  // State management untuk API call, loading, result, dan error
+  const [isLoading, setIsLoading] = useState(false)
+  const [result, setResult] = useState<FraudDetectionResult | null>(null)
+  const [error, setError] = useState<string>("")
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -82,36 +98,63 @@ export default function OnlinePaymentInputPage() {
     return date.toLocaleDateString('id-ID', options)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ✅ No.2: API Call Implementation dengan async/await
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
+    setError("")
+    setResult(null)
 
-    // Bulatkan waktu sebelum menghitung step
-    const roundedTimeInfo = roundTime(formData.transactionTime)
-    const calculatedStep = calculateStep(formData.transactionDate, formData.transactionTime)
+    try {
+      // Bulatkan waktu sebelum menghitung step
+      const roundedTimeInfo = roundTime(formData.transactionTime)
+      const calculatedStep = calculateStep(formData.transactionDate, formData.transactionTime)
 
-    // Validasi step
-    if (!validateStep(calculatedStep)) {
-      alert(`Step yang dihitung (${calculatedStep}) di luar range valid (1-744). Silakan pilih tanggal dan jam yang sesuai.`)
-      return
+      // Validasi step
+      if (!validateStep(calculatedStep)) {
+        setError(`Step yang dihitung (${calculatedStep}) di luar range valid (1-744). Silakan pilih tanggal dan jam yang sesuai.`)
+        setIsLoading(false)
+        return
+      }
+
+      // Siapkan data untuk backend
+      const dataForBackend = {
+        step: calculatedStep,
+        type: formData.type,
+        amount: parseFloat(formData.amount),
+        isFraud: parseInt(formData.isFraud),
+        oldbalanceOrg: parseFloat(formData.oldbalanceOrg),
+        newbalanceOrig: parseFloat(formData.newbalanceOrig),
+        oldbalanceDest: parseFloat(formData.oldbalanceDest),
+        newbalanceDest: parseFloat(formData.newbalanceDest),
+        // Info tambahan untuk debugging
+        originalTime: formData.transactionTime,
+        roundedTime: roundedTimeInfo.roundedTime,
+      }
+
+      // API Call ke backend
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/predict/online-payment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataForBackend),
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setResult(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan saat menganalisis transaksi")
+    } finally {
+      setIsLoading(false)
     }
-
-    // Siapkan data untuk backend (step sudah dikonversi dengan waktu yang dibulatkan)
-    const dataForBackend = {
-      step: calculatedStep, // Step yang sudah dihitung berdasarkan waktu yang dibulatkan
-      type: formData.type,
-      amount: parseFloat(formData.amount),
-      isFraud: parseInt(formData.isFraud),
-      oldbalanceOrg: parseFloat(formData.oldbalanceOrg),
-      newbalanceOrig: parseFloat(formData.newbalanceOrig),
-      oldbalanceDest: parseFloat(formData.oldbalanceDest),
-      newbalanceDest: parseFloat(formData.newbalanceDest),
-      // Info tambahan untuk debugging
-      originalTime: formData.transactionTime,
-      roundedTime: roundedTimeInfo.roundedTime,
-    }
-
-    // Here you would typically send the data to your API
-    // API call implementation goes here
   }
 
   // Hitung step dan pembulatan real-time untuk preview
@@ -156,7 +199,16 @@ export default function OnlinePaymentInputPage() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <form onSubmit={handleSubmit} className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
 
-          {/* Waktu Transaksi (Tanggal dan Jam) - Keterangan Naik Lagi */}
+          {/* ✅ No.4: Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-300 p-4 rounded-lg">
+              <p className="text-red-700 font-medium">
+                <strong>❌ Error:</strong> {error}
+              </p>
+            </div>
+          )}
+
+          {/* Waktu Transaksi (Tanggal dan Jam) */}
           <div className="space-y-3 sm:space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-8">
               <div className="flex-1 lg:max-w-md">
@@ -218,7 +270,7 @@ export default function OnlinePaymentInputPage() {
                 </div>
               </div>
 
-              {/* Keterangan di Kanan - Margin Top Dikurangi (Naik Lagi) */}
+              {/* Keterangan di Kanan */}
               <div className="flex-1 mt-20 lg:mt-28">
                 <p
                   className="text-[#7D7D7D] text-sm sm:text-base leading-relaxed text-justify"
@@ -226,11 +278,21 @@ export default function OnlinePaymentInputPage() {
                 >
                   Masukkan tanggal dan waktu transaksi yang akan dianalisis. Sistem akan otomatis memproses waktu untuk perhitungan deteksi penipuan.
                 </p>
+                
+                {/* Real-time Preview */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800 font-medium">📊 Preview Kalkulasi:</p>
+                  <p className="text-xs text-blue-700">
+                    Hari ke-{currentDay} | Waktu: {formData.transactionTime} → {currentRoundedTime.roundedTime}
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    <strong>Step: {currentStep}</strong> {!validateStep(currentStep) && <span className="text-red-600">(⚠️ Invalid Range)</span>}
+                  </p>
+                </div>
               </div>
             </div>
             <hr className="border-[#7D7D7D] opacity-30" />
           </div>
-
 
           {/* Type */}
           <div className="space-y-3 sm:space-y-4">
@@ -302,6 +364,7 @@ export default function OnlinePaymentInputPage() {
             </div>
             <hr className="border-[#7D7D7D] opacity-30" />
           </div>
+
 
           {/* Old Balance Origin */}
           <div className="space-y-3 sm:space-y-4">
@@ -447,14 +510,121 @@ export default function OnlinePaymentInputPage() {
             <hr className="border-[#7D7D7D] opacity-30" />
           </div>
 
-          {/* Submit Button */}
+          {/* ✅ No.3: Results Display */}
+          {result && (
+            <div className="bg-white border-2 border-gray-200 p-6 rounded-lg shadow-lg">
+              <div className="text-center space-y-4">
+                {/* Status dengan Icon */}
+                <div className={`text-6xl ${result.is_fraud ? "animate-pulse" : ""}`}>
+                  {result.is_fraud ? "🚨" : "✅"}
+                </div>
+
+                {/* Status Text */}
+                <h2
+                  className={`text-2xl font-bold ${
+                    result.is_fraud ? "text-red-800" : "text-green-800"
+                  }`}
+                >
+                  {result.is_fraud
+                    ? "FRAUD DETECTED"
+                    : "LEGITIMATE TRANSACTION"}
+                </h2>
+
+                {/* FRAUD/NOT FRAUD Text */}
+                <div
+                  className={`text-3xl font-bold ${
+                    result.is_fraud ? "text-red-600" : "text-green-600"
+                  }`}
+                >
+                  {result.is_fraud ? "FRAUD" : "NOT FRAUD"}
+                </div>
+
+                {/* Risk Score Badge */}
+                <div className="flex justify-center">
+                  <span
+                    className={`px-8 py-4 rounded-2xl text-xl font-bold shadow-lg ${
+                      result.risk_score === "HIGH"
+                        ? "bg-red-500 text-white"
+                        : result.risk_score === "MEDIUM"
+                          ? "bg-yellow-500 text-white"
+                          : "bg-green-500 text-white"
+                    }`}
+                  >
+                    Risk Score: {result.risk_score}
+                  </span>
+                </div>
+
+                {/* Additional Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-left">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 mb-2">Fraud Probability</h3>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {(result.fraud_probability * 100).toFixed(2)}%
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 mb-2">Confidence Level</h3>
+                    <p className="text-lg font-semibold text-blue-600">{result.confidence_level}</p>
+                  </div>
+                </div>
+
+                {/* Rekomendasi berdasarkan hasil */}
+                <div className="mt-6 text-left">
+                  <h3 className="text-lg font-semibold text-[#373642] mb-2">
+                    Rekomendasi:
+                  </h3>
+                  {result.is_fraud ? (
+                    <ul className="list-disc pl-5 space-y-1 text-red-700">
+                      <li>
+                        Transaksi mencurigakan terdeteksi — hentikan proses
+                        transfer segera.
+                      </li>
+                      <li>
+                        Hubungi layanan pelanggan untuk membekukan akun
+                        sementara.
+                      </li>
+                      <li>
+                        Jangan lakukan transaksi lanjutan hingga mendapatkan
+                        klarifikasi dari bank.
+                      </li>
+                      <li>
+                        Hubungi pihak berwajib untuk pengamanan lebih lanjut.
+                      </li>
+                    </ul>
+                  ) : (
+                    <ul className="list-disc pl-5 space-y-1 text-green-700">
+                      <li>Transaksi online Anda aman dan berhasil diproses.</li>
+                      <li>
+                        Pastikan koneksi internet Anda tetap aman saat
+                        transaksi.
+                      </li>
+                      <li>
+                        Hindari membagikan detail rekening kepada pihak yang
+                        tidak dikenal.
+                      </li>
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ No.5: Submit Button dengan Loading State */}
           <div className="pt-8 sm:pt-12 lg:pt-16">
             <Button
               type="submit"
-              className="w-full h-[50px] bg-gradient-to-r from-[#EE4312] to-[#FF5F31] hover:from-[#FF5F31] hover:to-[#EE4312] rounded-full text-white font-semibold text-base sm:text-lg lg:text-xl tracking-[0.07em] transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              disabled={isLoading}
+              className="w-full h-[50px] bg-gradient-to-r from-[#EE4312] to-[#FF5F31] hover:from-[#FF5F31] hover:to-[#EE4312] rounded-full text-white font-semibold text-base sm:text-lg lg:text-xl tracking-[0.07em] transition-all duration-300 hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
-              ANALISIS KEAMANAN TRANSAKSI
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Menganalisis Transaksi...</span>
+                </div>
+              ) : (
+                "ANALISIS KEAMANAN TRANSAKSI"
+              )}
             </Button>
           </div>
         </form>
