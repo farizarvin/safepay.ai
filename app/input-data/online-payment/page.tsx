@@ -227,11 +227,89 @@ export default function OnlinePaymentInputPage() {
             {isLoading ? "Loading..." : "ANALISIS KEAMANAN TRANSAKSI"}
           </Button>
 
+          {/* ✅ SIMPLE RESULTS DISPLAY DENGAN "FRAUD"/"NOT FRAUD" */}
           {result && (
-            <div className="mt-6 p-4 border rounded">
-              {/* Tampilkan hasil sesuai struktur result */}
-              <p>Status: {result.is_fraud ? "FRAUD" : "NOT FRAUD"}</p>
-              {/* ... dan seterusnya */}
+            <div className="bg-white border-2 border-gray-200 p-6 rounded-lg shadow-lg">
+              <div className="text-center space-y-4">
+                {/* Status dengan Icon */}
+                <div
+                  className={`text-6xl ${result.is_fraud ? "animate-pulse" : ""}`}
+                >
+                  {result.is_fraud ? "🚨" : "✅"}
+                </div>
+
+                {/* Status Text */}
+                <h2
+                  className={`text-2xl font-bold ${
+                    result.is_fraud ? "text-red-800" : "text-green-800"
+                  }`}
+                >
+                  {result.is_fraud
+                    ? "FRAUD DETECTED"
+                    : "LEGITIMATE TRANSACTION"}
+                </h2>
+
+                {/* ✅ TAMBAHAN: FRAUD/NOT FRAUD Text */}
+                <div
+                  className={`text-3xl font-bold ${
+                    result.is_fraud ? "text-red-600" : "text-green-600"
+                  }`}
+                >
+                  {result.is_fraud ? "FRAUD" : "NOT FRAUD"}
+                </div>
+
+                {/* Risk Score Badge */}
+                <div className="flex justify-center">
+                  <span
+                    className={`px-8 py-4 rounded-2xl text-xl font-bold shadow-lg ${
+                      result.risk_score === "HIGH"
+                        ? "bg-red-500 text-white"
+                        : result.risk_score === "MEDIUM"
+                          ? "bg-yellow-500 text-white"
+                          : "bg-green-500 text-white"
+                    }`}
+                  >
+                    Risk Score: {result.risk_score}
+                  </span>
+                </div>
+                {/* ✅ Rekomendasi berdasarkan hasil */}
+                <div className="mt-6 text-left">
+                  <h3 className="text-lg font-semibold text-[#373642] mb-2">
+                    Rekomendasi:
+                  </h3>
+                  {result.is_fraud ? (
+                    <ul className="list-disc pl-5 space-y-1 text-red-700">
+                      <li>
+                        Transaksi mencurigakan terdeteksi — hentikan proses
+                        transfer segera.
+                      </li>
+                      <li>
+                        Hubungi layanan pelanggan untuk membekukan akun
+                        sementara.
+                      </li>
+                      <li>
+                        Jangan lakukan transaksi lanjutan hingga mendapatkan
+                        klarifikasi dari bank.
+                      </li>
+                      <li>
+                        Hubungi Pihak berwarjib untuk pengamanan lebih lanjut.
+                      </li>
+                    </ul>
+                  ) : (
+                    <ul className="list-disc pl-5 space-y-1 text-green-700">
+                      <li>Transaksi online Anda aman dan berhasil diproses.</li>
+                      <li>
+                        Pastikan koneksi internet Anda tetap aman saat
+                        transaksi.
+                      </li>
+                      <li>
+                        Hindari membagikan detail rekening kepada pihak yang
+                        tidak dikenal.
+                      </li>
+                    </ul>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </form>
