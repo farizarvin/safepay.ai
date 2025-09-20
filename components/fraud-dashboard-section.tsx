@@ -387,9 +387,11 @@ export default function FraudDashboardSection() {
                         backgroundColor: "rgba(14, 25, 71, 0.95)",
                         border: "1px solid rgba(255, 255, 255, 0.2)",
                         borderRadius: "8px",
-                        color: "white",
+                        color : "white",
                       }}
+                      itemStyle={{color: "white"}}
                       formatter={(value: any) => [`${(Number(value) * 100).toFixed(1)}%`, "Importance Score"]}
+                     
                     />
                     <Bar 
                       dataKey="importance" 
@@ -460,7 +462,7 @@ export default function FraudDashboardSection() {
                           </span>
                         </div>
                         <p className="text-sm text-white">
-                          Importance Score: <span className="font-bold">{feature.score.toFixed(3)}</span> ({(feature.score * 100).toFixed(1)}%)
+                          Importance Score: <span className="text-white">{feature.score.toFixed(3)}</span> ({(feature.score * 100).toFixed(1)}%)
                         </p>
                       </div>
                     </div>
