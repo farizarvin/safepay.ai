@@ -35,8 +35,8 @@ export default function HeroSection({ onLearnMore, onTalkToSafy }: HeroSectionPr
                 className="w-full sm:w-auto bg-gradient-to-r from-[#EE4312] to-[#FF5F31] hover:from-[#FF5F31] hover:to-[#EE4312] text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg group min-w-[200px]"
               >
                 <Link href="/input-data/online-payment">
-                  Prediksi
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  Predict
+                  <ArrowRight className="ml-2 w-2 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
 

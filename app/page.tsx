@@ -14,7 +14,7 @@ export default function HomePage() {
   const [isScrolled, setIsScrolled] = useState(false)
 
   const navItems = [
-    { name: "Beranda", href: "#hero" },
+    { name: "Home", href: "#hero" },
     { name: "Dashboard", href: "#dashboard" },
     { name: "Online Payment", href: "#online-payment" }
   ]
@@ -80,7 +80,7 @@ export default function HomePage() {
             className="flex items-center group cursor-pointer hover:scale-105 transition-all duration-300"
           >
             <img
-              src="/logo.png"
+              src="/logo-oren.png"
               alt="SafePay.AI Logo"
               className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto group-hover:scale-110 transition-all duration-300 -ml-4 sm:-ml-6"
             />

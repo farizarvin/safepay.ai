@@ -5,9 +5,9 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'safepay',
+  description: 'Aplikasi canggih berbasis kecerdasan buatan dan machine learning yang dirancang untuk mendeteksi dan mencegah penipuan online secara efektif. Dengan teknologi analisis pola dan prediksi risiko, aplikasi ini membantu mengidentifikasi aktivitas mencurigakan dan melindungi pengguna dari berbagai modus penipuan digital yang semakin kompleks.',
+  generator: 'next.js',
 }
 
 export default function RootLayout({
@@ -25,6 +25,7 @@ html {
   --font-mono: ${GeistMono.variable};
 }
         `}</style>
+        <link rel="icon" href="/logo.png" />
       </head>
       <body>
         {children}

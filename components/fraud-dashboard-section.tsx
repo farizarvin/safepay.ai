@@ -644,7 +644,7 @@ export default function FraudDashboardSection() {
               <div className="mt-8 pt-6 border-t border-white/20">
                 <Button asChild className="w-full bg-gradient-to-r from-[#8B5A6B] to-[#4A5568] hover:from-[#4A5568] hover:to-[#8B5A6B] text-white font-semibold py-3 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg">
                   <Link href="/input-data/online-payment">
-                    Prediksi
+                    Predict
                   </Link>
                 </Button>
               </div>
